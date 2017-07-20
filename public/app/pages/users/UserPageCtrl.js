@@ -6,92 +6,131 @@
   'use strict';
 
   angular.module('BlurAdmin.pages.users')
-      .controller('UserPageCtrl', UserPageCtrl);
+      .controller('UserPageCtrl',['$scope', '$filter', 'editableOptions', 'editableThemes', '$window', '$http', '$uibModal', 'baProgressModal',UserPageCtrl] );
 
   /** @ngInject */
-  function UserPageCtrl($scope, $filter, editableOptions, editableThemes,$window) {
+  function UserPageCtrl($scope, $filter, editableOptions, editableThemes, $window, $http, $uibModal, baProgressModal) {
 
 
-
-    $scope.users = [
-      {
-        "UserId": 1,
-        "CourseId": 1,
-        "PaymentId": 454545,
-        "CourseName": "MEAN STACK",
-
-      },
-      {
-        "UserId": 1,
-        "CourseId": 2,
-        "PaymentId": 454545,
-        "CourseName": "FULL STACK",
-
-      },
-      {
-        "UserId": 1,
-        "CourseId": 3,
-        "PaymentId": 454545,
-        "CourseName": "MEAN STACK",
-
-      },
-      {
-        "UserId": 1,
-        "CourseId": 4,
-        "PaymentId": 2454545,
-        "CourseName": "MEAN STACK",
-
-      }
-
-    ];
-
-    // $scope.statuses = [
-    //   {value: 1, text: 'Good'},
-    //   {value: 2, text: 'Awesome'},
-    //   {value: 3, text: 'Excellent'},
-    // ];
-
-    // $scope.groups = [
-    //   {id: 1, text: '30 hours'},
-    //   {id: 2, text: '35 hours'},
-    //   {id: 3, text: '40 hours'},
-    //   {id: 4, text: '40 hours'}
-    // ];
-    //
-    // $scope.showGroup = function(user) {
-    //   if(user.group && $scope.groups.length) {
-    //     var selected = $filter('filter')($scope.groups, {id: user.group});
-    //     return selected.length ? selected[0].text : 'Not set';
-    //   } else return 'Not set'
-    // };
-    //
-    // $scope.showStatus = function(user) {
-    //   var selected = [];
-    //   if(user.status) {
-    //     selected = $filter('filter')($scope.statuses, {value: user.status});
-    //   }
-    //   return selected.length ? selected[0].text : 'Not set';
-    // };
+    $http.get("http://localhost:7800/api/all-users").then(function(response) {
+      $scope.users = response.data.data;
+    });
 
 
-    $scope.removeUser = function(index) {
+    $scope.createPost = function(named, mobiled, emailid, passwordv ,levelid) {
+      $http({
+          method: 'POST',
+          format: 'json',
+          url: 'http://localhost:7800/api/add-user',
+          data: JSON.stringify({
+            name: named,
+            mobile: mobiled,
+            email: emailid,
+            password: passwordv,
+            level: levelid
+          })
+        })
+        .then(function(success) {
+          //console.log("hit " + JSON.stringify(success));
+          $window.location.reload()
+        }, function(error) {
+          //console.log("not hit " + JSON.stringify(error));
+        });
+    }
+
+    $scope.removeCourse = function(id) {
+      var m = parseInt(id);
       if (confirm("Are you sure you want to delete?") == true) {
-          $scope.users.splice(index, 1);
+        $http.post("http://localhost:7800/api/delete-user/" + m).then(function(response) {
+        });
+        $window.location.reload()
       } else {
+      }
+    };
+
+    $scope.updateCourse = function(id) {
+      $scope.gotUser = {};
+      $scope.form = {};
+
+      // $window.location.reload()
+      //console.log(user.id);
+
+    //  console.log("scope id"+id);
+    //  console.log("scope name"+name);
+    //  console.log("scope mobile"+mobile);
+    //  console.log("scope email"+email);
+    //  console.log("scope password"+password);
+    //  console.log("scope level"+level);
+    //  console.log("scope user"+JSON.stringify($scope.users));
+    $http.get("http://localhost:7800/api/get-user/"+id).then(function(response) {
+      //console.log(response.data.response.data);
+      $scope.gotUser = response.data.response.data;
+      console.log($scope.gotUser.name);
+      $scope.form.name = $scope.gotUser.name;
+      console.log($scope.form.name);
+    });
+
+
+
+/*
+      var m = parseInt(id);
+      var data = JSON.stringify({
+        name: name,
+        mobile: mobile,
+        email: email,
+        password: password,
+        level: level
+      });
+      alert('data'+data);
+      // alert('m= '+m);
+      $http({
+          method: 'POST',
+          format: 'json',
+          url: 'http://localhost:7800/api/edit-user/'+m,
+          data: data
+        })
+        .then(function(success) {
+          console.log("hit " + JSON.stringify(success));
+          //$window.location.reload()
+        }, function(error) {
+          console.log("not hit " + JSON.stringify(error));
+        });*/
+    }
+
+    // $scope.addUser = function() {
+    //   // $http.post("http://localhost:7800/api/addCourse").then(function(response) {
+    //   //         console.log("hit");
+    //   //         console.log("response"+JSON.stringify(response.data.data));
+    //   //         // console.log("respomse data "+JSON.stringify(response.data));
+    //   //
+    //   //       //  $scope.users = response.data.data;
+    //   //     });
+    //   $scope.inserted = {
+    //     // id: $scope.users.length+1,
+    //     title: '',
+    //     description: null,
+    //     duration: null
+    //   };
+    //   $scope.users.push($scope.inserted);
+    // }
+    $scope.open = function(e,id,page, size) {
+
+      $uibModal.open({
+        animation: true,
+        templateUrl: page,
+        size: size,
+        resolve: {
+          items: function() {
+            return $scope.items;
+          }
+        }
+      });
+      if(e.target.innerText == 'Edit'){
+        $scope.updateCourse(id);
 
       }
-
     };
-
-    $scope.addUser = function() {
-      $scope.inserted = {
-        id: $scope.users.length+1,
-        name: '',
-        status: null,
-        group: null
-      };
-      $scope.users.push($scope.inserted);
-    };
+    $scope.openProgressDialog = baProgressModal.open;
 
     editableOptions.theme = 'bs3';
     editableThemes['bs3'].submitTpl = '<button type="submit" class="btn btn-primary btn-with-icon"><i class="ion-checkmark-round"></i></button>';
